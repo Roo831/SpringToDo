@@ -96,6 +96,10 @@ public class User implements UserDetails {
         return this.email;
     }
 
+    public LocalDateTime getUpdatedAt() {
+        return this.updatedAt;
+    }
+
 
     public static class UserBuilder {
         private Long id;

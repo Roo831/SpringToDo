@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+
+  sqlcont:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: 'tracker-user'
+      POSTGRES_PASSWORD: 'tracker-password'
+      POSTGRES_DB: tracker-db
+    networks:
+      - trackernet
+    ports:
+      - "5433:5432"
+
+  trackercont:
+    build: .
+    environment:
+      POSTGRES_HOST: sqlcont
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: tracker-db
+      POSTGRES_USER: tracker-user
+      POSTGRES_PASSWORD: 'tracker-password'
+    networks:
+      - trackernet
+    ports:
+      - "8081:8081"
+
+networks:
+  trackernet:
+   driver: bridge
