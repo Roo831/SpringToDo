@@ -41,7 +41,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> {
                     log.warn("User not found: {}", email);
-                    return new UsernameNotFoundException("User not found");
+                    return new UsernameNotFoundException("Resource not found");
                 });
     }
 
@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public ReadUserDto getByEmail(String username) {
         User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found"));
 
         System.out.println("User from DB: " + user.getUsername() + ", " + user.getCreatedAt());
         return userMapper.userToReadUserDto(user);
@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ReadUserDto updateUser(UpdateUserDto updateUserDto, User user) {
-        User userFromDB = userRepository.findByEmail(user.getUsername()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User userFromDB = userRepository.findByEmail(user.getUsername()).orElseThrow(() -> new ResourceNotFoundException("Resource not found"));
 
         if (updateUserDto.email() != null) {
             if(userRepository.existsByEmail(updateUserDto.email())){

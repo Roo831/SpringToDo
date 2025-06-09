@@ -27,6 +27,12 @@ public class TaskRepositoryImpl implements TaskRepository {
     }
 
     @Override
+    public List<Task> findByUserIdWithPagination(Long userId, int limit, int offset) {
+        String sql = "SELECT * FROM tasks WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        return jdbcTemplate.query(sql, taskRowMapper, userId, limit, offset);
+    }
+
+    @Override
     public Optional<Task> findByIdAndUserId(Long id, Long userId) {
         String sql = "SELECT * FROM tasks WHERE id = ? AND user_id = ?";
         return jdbcTemplate.query(sql, taskRowMapper, id, userId)

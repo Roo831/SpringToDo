@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 
 
 @ExtendWith(MockitoExtension.class)
-class AuthServiceTest { // TODO: переписать с spring security test
+class AuthServiceTest {
 
     @Mock
     private UserServiceImpl userService;
@@ -32,32 +32,32 @@ class AuthServiceTest { // TODO: переписать с spring security test
 
     @Test
     void register_shouldReturnToken() {
-        RegisterDto request = new RegisterDto("user@example.com", "password123"); // создаем дто
-        User mockUser = new User(); // // создаем пользователя
-        mockUser.setUsername("user@example.com"); // создаем пользователя почему то только емейл ставим, без пароля
+        RegisterDto request = new RegisterDto("user@example.com", "password123");
+        User mockUser = new User();
+        mockUser.setUsername("user@example.com");
 
-        when(userService.createUser(request)).thenReturn(mockUser); // мок бины, вызываемые в реальном классе должны создавать нашего мок юзера, когда мы посылаем ему dto
-        when(jwtService.generateToken(mockUser)).thenReturn("jwt-token"); // мок бин возвращает токен jwt-token
+        when(userService.createUser(request)).thenReturn(mockUser);
+        when(jwtService.generateToken(mockUser)).thenReturn("jwt-token");
 
-        AuthResponse response = authService.register(request);  // получаем ответ от нашего бина
+        AuthResponse response = authService.register(request);
 
-        assertEquals("jwt-token", response.token()); // сравниваем, токен ли вернулся
-        verify(userService).createUser(request); // сверяем, что сработал метод createUser
-        verify(jwtService).generateToken(mockUser); // сверяем, что сработал метод generateToken
+        assertEquals("jwt-token", response.token());
+        verify(userService).createUser(request);
+        verify(jwtService).generateToken(mockUser);
     }
 
     @Test
     void authenticate_shouldReturnToken() {
-        AuthRequest request = new AuthRequest("user@example.com", "password123"); // Всё то же самое
-        User mockUser = new User(); // Всё то же самое
-        mockUser.setUsername("user@example.com"); // Всё то же самое
+        AuthRequest request = new AuthRequest("user@example.com", "password123");
+        User mockUser = new User();
+        mockUser.setUsername("user@example.com");
 
-        when(userService.loadUserByUsername(request.email())).thenReturn(mockUser); // когда наш сервис вызывает loadUserByUsername, возвращаем ему мок юзера
-        when(jwtService.generateToken(mockUser)).thenReturn("jwt-token");  // мок бин возвращает токен jwt-token
+        when(userService.loadUserByUsername(request.email())).thenReturn(mockUser);
+        when(jwtService.generateToken(mockUser)).thenReturn("jwt-token");
 
-        AuthResponse response = authService.authenticate(request); // получаем ответ от нашего бина
+        AuthResponse response = authService.authenticate(request);
 
-        assertEquals("jwt-token", response.token()); // сравниваем
-        verify(authenticationManager).authenticate(any()); // проверяем, чтобы authenticateManager... я не знаю что это
+        assertEquals("jwt-token", response.token());
+        verify(authenticationManager).authenticate(any());
     }
 }

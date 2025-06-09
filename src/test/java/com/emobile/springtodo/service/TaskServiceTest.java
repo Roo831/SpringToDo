@@ -7,6 +7,9 @@ import com.emobile.springtodo.entity.User;
 import com.emobile.springtodo.exception.ResourceNotFoundException;
 import com.emobile.springtodo.mapper.TaskMapper;
 import com.emobile.springtodo.repository.TaskRepository;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,9 +31,17 @@ class TaskServiceTest {
     @Mock
     private TaskRepository taskRepository;
     @Mock private TaskMapper taskMapper;
+    @Mock private MeterRegistry meterRegistry;
+    @Mock private Counter counter;
 
     @InjectMocks
     private TaskService taskService;
+
+    @BeforeEach
+    void setUp() {
+        when(meterRegistry.counter("tasks.completed.count")).thenReturn(counter);
+        taskService = new TaskService(taskRepository, taskMapper, meterRegistry);
+    }
 
     @Test
     void createTask_shouldReturnDto() {
@@ -48,7 +59,6 @@ class TaskServiceTest {
         when(taskRepository.save(any(Task.class))).thenReturn(task);
         when(taskMapper.taskToReadTaskDto(task)).thenReturn(
                 new ReadTaskDto(1L, 1L, "Title", "Description", LocalDateTime.now(), dto.dueDate(), false));
-
         ReadTaskDto result = taskService.createTask(dto, user);
 
         assertEquals("Title", result.title());

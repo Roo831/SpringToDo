@@ -26,6 +26,14 @@ services:
     ports:
       - "8081:8081"
 
+  redis:
+    image: redis:7.0
+    container_name: tracker-redis
+    networks:
+      - trackernet
+    ports:
+      - "6379:6379"
+
 networks:
   trackernet:
    driver: bridge
