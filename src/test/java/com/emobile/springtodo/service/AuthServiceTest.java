@@ -4,6 +4,7 @@ import com.emobile.springtodo.dto.AuthRequest;
 import com.emobile.springtodo.dto.AuthResponse;
 import com.emobile.springtodo.dto.RegisterDto;
 import com.emobile.springtodo.entity.User;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,6 +32,7 @@ class AuthServiceTest {
     private AuthService authService;
 
     @Test
+    @DisplayName("Должен вернуть токен при успешной регистрации")
     void register_shouldReturnToken() {
         RegisterDto request = new RegisterDto("user@example.com", "password123");
         User mockUser = new User();
@@ -47,6 +49,7 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Должен вернуть токен при успешной аутентификации")
     void authenticate_shouldReturnToken() {
         AuthRequest request = new AuthRequest("user@example.com", "password123");
         User mockUser = new User();

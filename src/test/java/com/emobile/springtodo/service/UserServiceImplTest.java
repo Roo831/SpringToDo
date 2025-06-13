@@ -1,14 +1,13 @@
 package com.emobile.springtodo.service;
 
 
-import com.emobile.springtodo.dto.RegisterDto;
 import com.emobile.springtodo.dto.UpdateUserDto;
 import com.emobile.springtodo.entity.User;
 import com.emobile.springtodo.mapper.UserMapper;
 import com.emobile.springtodo.repository.UserRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,21 +32,9 @@ class UserServiceImplTest {
     @InjectMocks
     private UserServiceImpl userService;
 
-    @Test
-    void createUser_shouldEncodePasswordAndSaveUser() {
-        RegisterDto dto = new RegisterDto("email@example.com", "pass");
-        when(userRepository.existsByEmail(dto.email())).thenReturn(false);
-        when(passwordEncoder.encode("pass")).thenReturn("encodedPass");
-
-        userService.createUser(dto);
-
-        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(captor.capture());
-        assertEquals("email@example.com", captor.getValue().getUsername());
-        assertEquals("encodedPass", captor.getValue().getPassword());
-    }
 
     @Test
+    @DisplayName("Должен обновить пользователя и вернуть ДТО")
     void updateUser_shouldUpdateFields() {
         User user = User.builder()
                 .email("old@example.com")

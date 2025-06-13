@@ -10,6 +10,7 @@ import com.emobile.springtodo.repository.TaskRepository;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,6 +45,7 @@ class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("Должен создать и вернуть таску")
     void createTask_shouldReturnDto() {
         User user = new User();
         user.setId(1L);
@@ -66,6 +68,7 @@ class TaskServiceTest {
     }
 
     @Test
+    @DisplayName("Должен выбросить исключение, если таска не найдена")
     void getTaskById_shouldThrowIfNotFound() {
         User user = new User();
         user.setId(1L);
