@@ -1,6 +1,5 @@
 package com.emobile.springtodo.controller;
 
-
 import com.emobile.springtodo.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.emobile.springtodo.AbstractPostgresContainer;
@@ -21,21 +20,21 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 
 import java.time.LocalDateTime;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
-
-@Sql(scripts = {"/sql/clear-tables.sql", "/sql/insert-user.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @AutoConfigureMockMvc
 @TestPropertySource(properties = {
         "spring.cache.type=simple"
 })
+@Sql(scripts = {"/sql/clear-tables.sql", "/sql/insert-user.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 public class TaskControllerIntegrationTest extends AbstractPostgresContainer {
 
     @Autowired private MockMvc mockMvc;
@@ -49,7 +48,6 @@ public class TaskControllerIntegrationTest extends AbstractPostgresContainer {
 
     @BeforeEach
     void setup() throws Exception {
-
         String json = """
                 {
                   "email": "user@example.com",
@@ -71,13 +69,20 @@ public class TaskControllerIntegrationTest extends AbstractPostgresContainer {
     void testCreateTask() throws Exception {
         CreateTaskDto dto = new CreateTaskDto("Title", "Desc", LocalDateTime.now().plusDays(1));
 
-        mockMvc.perform(post("/api/tasks")
+        ResultActions result = mockMvc.perform(post("/api/tasks")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.title").value("Title"))
-                .andExpect(jsonPath("$.description").value("Desc"));
+                .andExpect(status().isCreated());
+
+        String expectedJson = """
+            {
+                "title": "Title",
+                "description": "Desc"
+            }
+        """;
+        String actualJson = result.andReturn().getResponse().getContentAsString();
+        assertEquals(expectedJson, actualJson, false);
     }
 
     @Test
@@ -94,10 +99,20 @@ public class TaskControllerIntegrationTest extends AbstractPostgresContainer {
                 .build();
         taskRepository.save(task);
 
-        mockMvc.perform(get("/api/tasks")
+        ResultActions result = mockMvc.perform(get("/api/tasks")
                         .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("Sample"));
+                .andExpect(status().isOk());
+
+        String expectedJson = """
+            [
+                {
+                    "title": "Sample",
+                    "description": "For Get"
+                }
+            ]
+        """;
+        String actualJson = result.andReturn().getResponse().getContentAsString();
+        assertEquals(expectedJson, actualJson, false);
     }
 
     @Test
@@ -119,23 +134,35 @@ public class TaskControllerIntegrationTest extends AbstractPostgresContainer {
         }
 
         // первая страница (limit=2, offset=0)
-        mockMvc.perform(get("/api/tasks/paged")
+        ResultActions result1 = mockMvc.perform(get("/api/tasks/paged")
                         .header("Authorization", "Bearer " + jwtToken)
                         .param("limit", "2")
                         .param("offset", "0"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].title").value("Task 1"))
-                .andExpect(jsonPath("$[1].title").value("Task 2"));
+                .andExpect(status().isOk());
 
-        // вторая страница (limit=2, offset=2)
-        mockMvc.perform(get("/api/tasks/paged")
+        String expectedJson1 = """
+            [
+                { "title": "Task 1" },
+                { "title": "Task 2" }
+            ]
+        """;
+        String actualJson1 = result1.andReturn().getResponse().getContentAsString();
+        assertEquals(expectedJson1, actualJson1, false);
+
+        // вторая страница
+        ResultActions result2 = mockMvc.perform(get("/api/tasks/paged")
                         .header("Authorization", "Bearer " + jwtToken)
                         .param("limit", "2")
                         .param("offset", "2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].title").value("Task 3"));
+                .andExpect(status().isOk());
+
+        String expectedJson2 = """
+            [
+                { "title": "Task 3" }
+            ]
+        """;
+        String actualJson2 = result2.andReturn().getResponse().getContentAsString();
+        assertEquals(expectedJson2, actualJson2, false);
     }
 
     @Test
@@ -153,13 +180,20 @@ public class TaskControllerIntegrationTest extends AbstractPostgresContainer {
 
         UpdateTaskDto dto = new UpdateTaskDto("New", "New Desc", LocalDateTime.now().plusDays(2), true);
 
-        mockMvc.perform(put("/api/tasks/" + task.getId())
+        ResultActions result = mockMvc.perform(put("/api/tasks/" + task.getId())
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.title").value("New"))
-                .andExpect(jsonPath("$.completed").value(true));
+                .andExpect(status().isCreated());
+
+        String expectedJson = """
+            {
+                "title": "New",
+                "completed": true
+            }
+        """;
+        String actualJson = result.andReturn().getResponse().getContentAsString();
+        assertEquals(expectedJson, actualJson, false);
     }
 
     @Test
@@ -180,28 +214,41 @@ public class TaskControllerIntegrationTest extends AbstractPostgresContainer {
                 .andExpect(status().isNoContent());
     }
 
-    @DisplayName("Должен вернуть 404, если задача не найдена")
     @Test
+    @DisplayName("Должен вернуть 404, если задача не найдена")
     void shouldReturn404WhenTaskNotFound() throws Exception {
         Long nonExistentTaskId = 9999L;
 
-        mockMvc.perform(get("/api/tasks/" + nonExistentTaskId)
+        ResultActions result = mockMvc.perform(get("/api/tasks/" + nonExistentTaskId)
                         .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Resource not found"));
+                .andExpect(status().isNotFound());
+
+        String expectedJson = """
+            {
+                "message": "Resource not found"
+            }
+        """;
+        String actualJson = result.andReturn().getResponse().getContentAsString();
+        assertEquals(expectedJson, actualJson, false);
     }
 
-    @DisplayName("Должен вернуть 400 при валидационной ошибке")
     @Test
+    @DisplayName("Должен вернуть 400 при валидационной ошибке")
     void shouldReturn400ForValidationError() throws Exception {
-
         CreateTaskDto createTaskDto = new CreateTaskDto(null, "Desc", LocalDateTime.now().plusDays(1));
 
-        mockMvc.perform(post("/api/tasks")
+        ResultActions result = mockMvc.perform(post("/api/tasks")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createTaskDto)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").exists());
+                .andExpect(status().isBadRequest());
+
+        String expectedJson = """
+            {
+                "title": "must not be blank"
+            }
+        """;
+        String actualJson = result.andReturn().getResponse().getContentAsString();
+        assertEquals(expectedJson, actualJson, false);
     }
 }
